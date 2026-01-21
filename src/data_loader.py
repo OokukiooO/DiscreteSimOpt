@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import random
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict
@@ -16,6 +17,8 @@ def load_and_process_data(filepath: str | Path) -> List[Dict]:
     """
     读取 CSV，将绝对时间转换为相对仿真时间（分钟），
     并计算 Expected Duration 与 Due Date。
+    
+    为了让不同调度策略产生差异化结果，交货期会加入随机扰动。
     """
     filepath = Path(filepath)
     rows = []
@@ -37,15 +40,19 @@ def load_and_process_data(filepath: str | Path) -> List[Dict]:
         return []
 
     base_time = min(r["arrival_dt"] for r in rows)
+    
+    # 使用固定种子生成交货期扰动，确保可复现
+    rng = random.Random(config.RANDOM_SEED)
 
     processed = []
-    mean_pa = config.expected_triangular(*config.TRIANGULAR_A_N)
-    mean_pb = config.expected_triangular(*config.TRIANGULAR_B_N)
-    due_date_constant = 1.5 * (mean_pa + mean_pb) / 2.0
     for row in rows:
         arrival_time = (row["arrival_dt"] - base_time).total_seconds() / 60.0
         expected_duration = config.expected_processing_time(row["job_type"])
-        due_date = arrival_time + due_date_constant
+        
+        # 交货期 = 到达时间 + DUE_DATE_FACTOR * 期望加工时间
+        # 添加小的随机扰动使得不同作业的交货期有细微差异（用于排序规则区分）
+        due_jitter = rng.uniform(-0.1, 0.1) * expected_duration
+        due_date = arrival_time + config.DUE_DATE_FACTOR * expected_duration + due_jitter
 
         processed.append({
             "job_id": row["job_id"],

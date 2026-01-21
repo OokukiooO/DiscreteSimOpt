@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-# 全局配置参数（可根据课题设定调整）
+# 全局配置参数（严格按照题目要求，不可随意修改）
 
-# 机器数量
-A_MACHINES = 3  # 慢机，仅加工 N
-B_MACHINES = 2  # 快机，加工 H（必须）及 N（可选）
+# 机器数量（题目规定）
+A_MACHINES = 3  # A型机（慢机），仅加工 N 类订单
+B_MACHINES = 2  # B型机（快机），加工 H 类（必须）及 N 类（可选）
 
-# 三角分布参数 [a, c, b] = (min, mode, max)，单位：分钟
+# 三角分布参数 [a, c, b] = (min, mode, max)，单位：分钟（题目规定）
 # H on B
 TRIANGULAR_B_H = (300, 400, 800)
 # N on B
@@ -15,9 +15,12 @@ TRIANGULAR_B_N = (200, 280, 600)
 TRIANGULAR_A_N = (360, 480, 840)
 
 # 优化策略参数
-# 仅当 A 机“很忙”且 B 机未来一段时间无 H 到达时，N 才可去 B
-A_BUSY_THRESHOLD = 4  # A 队列长度阈值（含在制）
-B_RESERVATION_WINDOW = 60.0  # 预留窗口（分钟）
+A_BUSY_THRESHOLD = 5  # A 队列长度阈值（每台 A 机后排 5 个以上视为堵死）
+B_RESERVATION_WINDOW = 200.0  # 预留窗口（分钟）
+A_QUEUE_STRICT_LIMIT = 15  # A 队列总长度严格限制（3台 * 5 = 15）
+
+# 交货期设置（与期望加工时间相关）
+DUE_DATE_FACTOR = 1.5  # 交货期 = 到达时间 + 1.5 * 期望加工时间
 
 # 统一随机种子（保证可复现）
 RANDOM_SEED = 42
